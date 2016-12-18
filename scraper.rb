@@ -175,7 +175,7 @@ def determine_columns(page)
 end
 
 # Strip header and footer from page, to return just the prosecutions
-def get_raw_records(page)
+def get_raw_lines(page)
   header = extract_header(page)
   start = page.index(header) + 1
   stop = -2 # last line is always a footer
@@ -219,12 +219,10 @@ end
 # Iterate through all pages to build up records
 def extract_records_from_pages(pages)
   pages.each do |page|
-    columns     = determine_columns(page)
-    raw_records = get_raw_records(page)
-    build_records(raw_records, columns)
+    columns   = determine_columns(page)
+    raw_lines = get_raw_lines(page)
+    build_records(raw_lines, columns)
   end
-
-  binding.pry
 
   @records
 end
