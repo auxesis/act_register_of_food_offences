@@ -183,8 +183,8 @@ def get_raw_lines(page)
   page[start..stop]
 end
 
-def end_of_record?(column, value)
-  !!(column == 'Offence Proven' && value =~ /Total \(\d+\) Charge/i)
+def end_of_record?(line)
+  !!(line =~ /Total \(\d+\) Charge/i)
 end
 
 def finalise_record!
@@ -231,9 +231,8 @@ def finalise_record!
   values.map!(&:strip).reject! {|v| v.blank?}
   @record['notes'] = values.join(' ')
 
-  binding.pry
-
-  @record
+  @records << @record
+  @record = nil
 end
 
 def add_to_record(column, value)
@@ -245,13 +244,6 @@ def add_to_record(column, value)
 
   @record[column] ||= []
   @record[column] << value
-
-  # Work out if a new record needs to be created
-  if end_of_record?(column,value)
-    finalise_record!
-    @records << @record
-    @record = nil
-  end
 end
 
 def build_records(raw_lines, columns)
@@ -260,6 +252,7 @@ def build_records(raw_lines, columns)
       string = line[range]
       add_to_record(column, string)
     end
+    finalise_record! if end_of_record?(line)
   end
 end
 
