@@ -184,7 +184,23 @@ def get_raw_lines(page)
 end
 
 def end_of_record?(column, value)
-  column == 'Offence Proven' && value =~ /^Total \(\d+\) Charge/
+  !!(column == 'Offence Proven' && value =~ /^Total \(\d+\) Charge/i)
+end
+
+def finalise_record!
+  # Prosecution Details
+  values = @record.delete('Prosecution Details') || []
+  values.reject! {|p| p.blank?}
+  @record['prosecution_details'] = values.join(' ')
+
+  # Business Address
+  values = @record.delete('Business Address') || []
+  values.reject! {|p| p.blank?}
+  @record['business_address'] = values.join(' ')
+
+  # Date of Offence
+  # Offence Proven
+  # Imposed Penalty
 end
 
 def add_to_record(column, value)
