@@ -237,7 +237,8 @@ def finalise_record!
   @record = nil
 end
 
-def fix_record_offsets!
+# Fix values being spread across multiple records incorrectly
+def fix_spread_values!
   @records.each_with_index do |record, index|
     offset = record['imposed_penalties'].size - record['offence_proven'].size
     case offset
@@ -290,7 +291,7 @@ def extract_records_from_pages(pages)
     build_records(raw_lines, columns)
   end
 
-  fix_record_offsets!
+  fix_spread_values!
 
   @records
 end
