@@ -237,8 +237,21 @@ def finalise_record!
   @record = nil
 end
 
-# Fix values being spread across multiple records incorrectly
-def fix_spread_values!
+# Normalise the "Imposed Penalties" field across all records.
+#
+# There is an edge case where the dollar value normally expected on a
+# "Total (x) Charges" termination line is on the next line. Because we
+# use that line as the record terminator, the dollar value is pushed into the
+# next record.
+#
+# This method:
+#
+#  - Removes the dollar value from the "Total (x) Charges" line, because it's
+#    just a total that the user can automatically compute.
+#  - Deletes the "Total (x) Charges" dollar value that sometimes gets put into
+#    the next record.
+#
+def clean_imposed_penalties!
   @records.each_with_index do |record, index|
     offset = record['imposed_penalties'].size - record['offence_proven'].size
     case offset
@@ -291,7 +304,7 @@ def extract_records_from_pages(pages)
     build_records(raw_lines, columns)
   end
 
-  fix_spread_values!
+  clean_imposed_penalties!
 
   @records
 end
