@@ -190,17 +190,50 @@ end
 def finalise_record!
   # Prosecution Details
   values = @record.delete('Prosecution Details') || []
-  values.reject! {|p| p.blank?}
+  values.compact!
+  values.map!(&:strip).reject! {|v| v.blank?}
   @record['prosecution_details'] = values.join(' ')
 
   # Business Address
   values = @record.delete('Business Address') || []
-  values.reject! {|p| p.blank?}
+  values.compact!
+  values.map!(&:strip).reject! {|v| v.blank?}
   @record['business_address'] = values.join(' ')
 
   # Date of Offence
+  values = @record.delete('Date of Offence') || []
+  values.compact!
+  values.map!(&:strip).reject! {|v| v.blank?}
+  @record['offence_dates'] = values
+
   # Offence Proven
+  values = @record.delete('Offence Proven') || []
+  values.compact!
+  values.map!(&:strip).reject! {|v| v.blank?}
+  values.reject! {|v| v =~ /Total \(\d+\) Charge/i}
+  @record['offence_proven'] = values
+
   # Imposed Penalty
+  values = @record.delete('Imposed Penalty') || []
+  values.compact!
+  values.map!(&:strip).reject! {|v| v.blank?}
+  @record['imposed_penalties'] = values
+
+  # Removal Date
+  values = @record.delete('Removal date') || []
+  values.compact!
+  values.map!(&:strip).reject! {|v| v.blank?}
+  @record['removal_date'] = values.join(' ')
+
+  # Notes
+  values = @record.delete('Notes') || []
+  values.compact!
+  values.map!(&:strip).reject! {|v| v.blank?}
+  @record['notes'] = values.join(' ')
+
+  binding.pry
+
+  @record
 end
 
 def add_to_record(column, value)
@@ -258,6 +291,8 @@ end
 
 def main
   prosecutions = fetch_and_build_prosecutions
+
+  binding.pry
 
   puts "### Found #{prosecutions.size} notices"
   new_prosecutions = prosecutions.select {|r| !existing_record_ids.include?(r['link'])}
