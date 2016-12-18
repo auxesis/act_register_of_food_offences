@@ -268,7 +268,8 @@ def split_records_into_multiple_prosecutions(records)
         'offence'          => offence,
         'imposed_penalty'  => penalty,
         'removal_date'     => record['removal_date'],
-        'notes'            => record['notes']
+        'notes'            => record['notes'],
+        'link'             => url,
       }
       prosecution['id'] = generate_id(prosecution)
 
