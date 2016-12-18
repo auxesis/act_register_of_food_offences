@@ -19,32 +19,17 @@ class String
   end
 end
 
-def normalise_date(value)
-  case
-  when value.class == DateTime
-    return value.to_date
-  when value.class == String
-    return Date.parse(value)
-  when value.class == Date
-    return value
-  else
-    puts "[debug] Unhandled date: #{value.inspect}"
-    raise
-  end
-end
-
-def generate_id(details)
-  return details.values.map(&:to_s).join(' ').to_md5
+def generate_id(record)
+  return record.map(&:to_s).join(' ').to_md5
 end
 
 def geocode(prosecution)
   @addresses ||= {}
 
-  address = prosecution['address']
   address = [
-    prosecution['address'],
-    prosecution['county'],
-    prosecution['postcode'],
+    prosecution['business_address'],
+    'Canberra',
+    'ACT'
   ].join(', ')
 
   if @addresses[address]
@@ -55,7 +40,7 @@ def geocode(prosecution)
     a = Geokit::Geocoders::GoogleGeocoder.geocode(address)
 
     if !a.lat && !a.lng
-      a = Geokit::Geocoders::GoogleGeocoder.geocode(prosecution['postcode'])
+      puts "[debug] Couldn't geocode #{address}"
     end
 
     location = {
@@ -71,7 +56,7 @@ end
 
 def existing_record_ids
   return @cached if @cached
-  @cached = ScraperWiki.select('link from data').map {|r| r['link']}
+  @cached = ScraperWiki.select('id from data').map {|r| r['id']}
 rescue SqliteMagic::NoSuchTable
   []
 end
@@ -204,9 +189,9 @@ def finalise_record!
   values = @record.delete('Date of Offence') || []
   values.compact!
   values.map!(&:strip).reject! {|v| v.blank?}
+  values.map! {|v| Date.parse(v)}
   @record['offence_dates'] = values
 
-  # TODO(auxesis): split offences into individual records
   # Offence Proven
   values = @record.delete('Offence Proven') || []
   values.compact!
@@ -214,7 +199,6 @@ def finalise_record!
   values.reject! {|v| v =~ /Total \(\d+\) Charge/i}
   @record['offence_proven'] = values
 
-  # TODO(auxesis): split offences into individual records
   # Imposed Penalty
   values = @record.delete('Imposed Penalty') || []
   values.compact!
@@ -225,7 +209,7 @@ def finalise_record!
   values = @record.delete('Removal date') || []
   values.compact!
   values.map!(&:strip).reject! {|v| v.blank?}
-  @record['removal_date'] = values.join(' ')
+  @record['removal_date'] = Date.parse(values.join(' '))
 
   # Notes
   values = @record.delete('Notes') || []
@@ -269,10 +253,30 @@ def clean_imposed_penalties!
   end
 end
 
+# TODO(auxesis): split offences into individual records
 def split_records_into_multiple_prosecutions(records)
-  binding.pry
+  prosecutions = []
 
-  records
+  records.each do |record|
+    offences = record['offence_proven']
+    penalties = record['imposed_penalties']
+    offences.zip(penalties).each do |offence,penalty|
+      prosecution = {
+        'business_name'    => record['prosecution_details'],
+        'business_address' => record['business_address'],
+        'offence_date'     => record['offence_dates'].first,
+        'offence'          => offence,
+        'imposed_penalty'  => penalty,
+        'removal_date'     => record['removal_date'],
+        'notes'            => record['notes']
+      }
+      prosecution['id'] = generate_id(prosecution)
+
+      prosecutions << prosecution
+    end
+  end
+
+  prosecutions
 end
 
 def add_to_record(column, value)
@@ -328,15 +332,13 @@ end
 def main
   prosecutions = fetch_and_build_prosecutions
 
-  binding.pry
-
   puts "### Found #{prosecutions.size} notices"
-  new_prosecutions = prosecutions.select {|r| !existing_record_ids.include?(r['link'])}
+  new_prosecutions = prosecutions.select {|r| !existing_record_ids.include?(r['id'])}
   puts "### There are #{new_prosecutions.size} new prosecutions"
   new_prosecutions.map! {|p| geocode(p) }
 
   # Serialise
-  ScraperWiki.save_sqlite(['link'], new_prosecutions)
+  ScraperWiki.save_sqlite(['id'], new_prosecutions)
 
   puts "Done"
 end
