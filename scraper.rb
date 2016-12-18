@@ -184,7 +184,7 @@ def get_raw_lines(page)
 end
 
 def end_of_record?(line)
-  !!(line =~ /Total \(\d+\) Charge/i)
+  line =~ /Total \(\d+\) Charge/i
 end
 
 def finalise_record!
