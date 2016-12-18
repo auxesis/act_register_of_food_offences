@@ -3,6 +3,7 @@ require 'geokit'
 require 'pdf-reader'
 require 'pry'
 require 'nokogiri'
+require 'active_support/core_ext/string'
 
 # Set an API key if provided
 Geokit::Geocoders::GoogleGeocoder.api_key = ENV['MORPH_GOOGLE_API_KEY'] if ENV['MORPH_GOOGLE_API_KEY']
