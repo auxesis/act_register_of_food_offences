@@ -194,24 +194,22 @@ def add_to_record(column, value)
   # The record currently being processed
   @record ||= {}
 
-  @record[column] ||= ''
-  @record[column] += ' ' if @record[column][-1] !~ /^\s$/ # add whitespace if none, so records don't smoosh together
-  @record[column] += value
+  @record[column] ||= []
+  @record[column] << value
 
   # Work out if a new record needs to be created
   if end_of_record?(column,value)
+    finalise_record!
     @records << @record
     @record = nil
   end
 end
 
-def build_records(raw_records, columns)
-  raw_records.each do |line|
+def build_records(raw_lines, columns)
+  raw_lines.each do |line|
     columns.each do |column, range|
       string = line[range]
-      if string && string.strip!
-        add_to_record(column, string)
-      end
+      add_to_record(column, string)
     end
   end
 end
