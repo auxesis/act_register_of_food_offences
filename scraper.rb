@@ -206,6 +206,7 @@ def finalise_record!
   values.map!(&:strip).reject! {|v| v.blank?}
   @record['offence_dates'] = values
 
+  # TODO(auxesis): split offences into individual records
   # Offence Proven
   values = @record.delete('Offence Proven') || []
   values.compact!
@@ -213,6 +214,7 @@ def finalise_record!
   values.reject! {|v| v =~ /Total \(\d+\) Charge/i}
   @record['offence_proven'] = values
 
+  # TODO(auxesis): split offences into individual records
   # Imposed Penalty
   values = @record.delete('Imposed Penalty') || []
   values.compact!
