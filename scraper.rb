@@ -237,6 +237,30 @@ def finalise_record!
   @record = nil
 end
 
+def fix_record_offsets!
+  @records.each_with_index do |record, index|
+    offset = record['imposed_penalties'].size - record['offence_proven'].size
+    case offset
+    # Default case, where there's a total at the end that must be deleted
+    when 1
+      record['imposed_penalties'].delete_at(-1)
+    # Edge case, where total has been spread across multiple lines
+    when 0
+      next_record = @records[index+1]
+      next_record['imposed_penalties'].delete_at(0)
+    # Unhandled case, where the data has changed significantly
+    else
+      raise "Unhandled offset: #{offset} #{record.inspect}"
+    end
+  end
+end
+
+def split_records_into_multiple_prosecutions(records)
+  binding.pry
+
+  records
+end
+
 def add_to_record(column, value)
   # Collection of all records
   @records ||= []
@@ -266,6 +290,8 @@ def extract_records_from_pages(pages)
     build_records(raw_lines, columns)
   end
 
+  fix_record_offsets!
+
   @records
 end
 
@@ -281,7 +307,8 @@ def fetch_and_build_prosecutions
   reader = PDF::Reader.new(io)
 
   pages = clean_pages(reader.pages)
-  extract_records_from_pages(pages)
+  records = extract_records_from_pages(pages)
+  prosecutions = split_records_into_multiple_prosecutions(records)
 end
 
 def main
