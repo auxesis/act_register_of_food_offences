@@ -184,7 +184,7 @@ def get_raw_lines(page)
 end
 
 def end_of_record?(column, value)
-  !!(column == 'Offence Proven' && value =~ /^Total \(\d+\) Charge/i)
+  !!(column == 'Offence Proven' && value =~ /Total \(\d+\) Charge/i)
 end
 
 def finalise_record!
