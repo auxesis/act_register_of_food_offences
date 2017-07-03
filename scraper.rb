@@ -66,7 +66,7 @@ def base
 end
 
 def path
-  '/sites/default/files//Register%20of%20Food%20Offences_5.pdf'
+  '/sites/default/files//Register_of_Food_Offences_20June_2017ppm.pdf'
 end
 
 def url
@@ -74,7 +74,7 @@ def url
 end
 
 def last_known_link_text
-  'Register of Food Offences (updated 18 November 2016)'
+  'Register of Food Offences (updated 20 June 2017)'
 end
 
 # ACT health don't publish the PDF of the register of offences at a consistent
@@ -92,8 +92,8 @@ end
 # - http://health.act.gov.au/sites/default/files//Register%20of%20Food%20Offences%20%28updated%2017%20Sep%202015%29.pdf
 # - http://health.act.gov.au/sites/default/files//Register%20of%20Food%20Offences.pdf
 # - http://www.health.act.gov.au/sites/default/files//Register%20of%20Food%20Offences.pdf
-# - http://www.health.act.gov.au/sites/default/files//Register%20of%20Food%20Offences.pdf
 # - http://www.health.act.gov.au/sites/default/files//Register%20of%20Food%20Offences_0.pdf
+# - http://www.health.act.gov.au/sites/default/files//Register_of_Food_Offences_20June_2017ppm.pdf
 #
 # Note that some of them are duplicate, so there's no guarantee that if the
 # resource URL has not changed, the resource is not the same.
@@ -236,6 +236,10 @@ end
 #    the next record.
 #
 def clean_imposed_penalties!
+  @records.each do |record|
+    record['imposed_penalties'].select! {|value| value =~ /\$\d*,*\d+$/}
+  end
+
   @records.each_with_index do |record, index|
     offset = record['imposed_penalties'].size - record['offence_proven'].size
     case offset
@@ -245,10 +249,10 @@ def clean_imposed_penalties!
     # Edge case, where total has been spread across multiple lines
     when 0
       next_record = @records[index+1]
-      next_record['imposed_penalties'].delete_at(0)
+      next_record['imposed_penalties'].delete_at(0) if next_record
     # Unhandled case, where the data has changed significantly
     else
-      raise "Unhandled offset: #{offset} #{record.inspect}"
+      raise "Unhandled offset: #{offset}: #{record.inspect}"
     end
   end
 end
