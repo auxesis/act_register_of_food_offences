@@ -365,9 +365,34 @@ def fix_ids
   end
 end
 
+# This is useful because ACT health removes the all-but-current PDF.
+def save_to_wayback_machine
+  puts '[info] save_to_wayback_machine: Saving PDF to be scraped to the Wayback Machine.'
+  require 'net/http'
+
+  save_url = 'http://web.archive.org/save/' + url
+  uri = URI(save_url)
+
+  Net::HTTP.start(uri.host, uri.port) do |http|
+    request = Net::HTTP::Get.new(uri)
+    response = http.request(request)
+    if response.class != Net::HTTPFound
+      puts "[info] save_to_wayback_machine: Attempt to save #{url} to Wayback Machine failed"
+      puts "[info] save_to_wayback_machine: Checking if the linked PDF is different to the last known PDF."
+      abort_if_updated?
+      puts "[info] save_to_wayback_machine: The PDF hasn't changed, but the PDF is no longer there."
+      puts "[info] save_to_wayback_machine: Exiting!"
+      exit(2)
+    end
+  end
+end
+
 def main
   # Fix up ids after design flaw in algorithm to generate id
   fix_ids
+
+  # Ping the wayback machine to save a copy of the PDF.
+  save_to_wayback_machine
 
   # The normal scraper run
   prosecutions = fetch_and_build_prosecutions
