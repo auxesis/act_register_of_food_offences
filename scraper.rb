@@ -325,8 +325,6 @@ def clean_pages(pages)
 end
 
 def fetch_and_build_prosecutions
-  abort_if_updated?
-
   io = open(url)
   reader = PDF::Reader.new(io)
 
