@@ -19,6 +19,18 @@ class String
   end
 end
 
+def logging_method_name
+  caller[1][/`(block in )*(.+)'/,2] + ': '
+end
+
+def info(message)
+  puts '[info] ' + logging_method_name + message
+end
+
+def debug(message)
+  puts '[debug] ' + logging_method_name + message
+end
+
 def generate_id(record)
   blacklist_keys = %w(id link lat lng)
   return Hash[record.reject {|k,v| blacklist_keys.include?(k)}].map(&:to_s).join(' ').to_md5
@@ -34,15 +46,13 @@ def geocode(prosecution)
   ].join(', ')
 
   if @addresses[address]
-    puts "Geocoding [cache hit] #{address}"
+    info('Geocoding [cache hit] ' + address)
     location = @addresses[address]
   else
-    puts "Geocoding #{address}"
+    info('Geocoding ' + address)
     a = Geokit::Geocoders::GoogleGeocoder.geocode(address)
 
-    if !a.lat && !a.lng
-      puts "[debug] Couldn't geocode #{address}"
-    end
+    debug('Could not geocode ' + address) if !a.lat && !a.lng
 
     location = {
       'lat' => a.lat,
@@ -119,20 +129,20 @@ def abort_if_updated?
 
   case
   when !register_link
-    puts '[fatal] Could not find register link. Page source:'
-    puts "\n" + doc + "\n"
-    puts '[fatal] Exiting!'
-    exit 1
+    info('Could not find register link. Page source:')
+    info("\n" + doc + "\n")
+    info('Exiting!')
+    exit(1)
   when register_link_text != last_known_link_text
-    puts '[fatal] Link text has changed!'
-    puts '[fatal] Expected: ' + last_known_link_text
-    puts '[fatal] Actual:   ' + register_link_text
-    puts '[fatal] Exiting!'
-    exit 2
+    info('Link text has changed!')
+    info('Expected: ' + last_known_link_text)
+    info('Actual:   ' + register_link_text)
+    info('Exiting!')
+    exit(2)
   when register_link['href'] != path
-    puts '[fatal] New register published at ' + register_link['href']
-    puts '[fatal] Exiting!'
-    exit 3
+    info('New register published at ' + register_link['href'])
+    info('Exiting!')
+    exit(3)
   end
 end
 
@@ -342,30 +352,30 @@ def fix_ids
   fixed_record_ids = records.map {|r| r['id']}
 
   if (original_record_ids - fixed_record_ids).size > 0
-    puts "[info] fix_ids: Number of records to fix: #{original_record_ids.size}"
-    puts "[info] fix_ids: Number of records after fix: #{fixed_record_ids.size}"
+    info('Number of records to fix: ' + original_record_ids.size)
+    info('Number of records after fix: ' + fixed_record_ids.size)
 
-    puts "[info] fix_ids: Deleting old records!"
+    info('Deleting old records!')
     ScraperWiki.sqliteexecute('DELETE FROM data')
 
-    puts "[info] fix_ids: Saving new records!"
+    info('Saving new records!')
     ScraperWiki.save_sqlite(['id'], records)
     saved_record_ids = ScraperWiki.select('id from data').map {|r| r['id']}
 
-    puts "[info] fix_ids: Number of records after save: #{saved_record_ids.size}"
+    info('Number of records after save: ' + saved_record_ids.size)
 
     if fixed_record_ids.size != saved_record_ids.size
-      puts "[info] fix_ids: Error: fixed #{fixed_record_ids.size} and saved #{saved_record_ids.size} do not match!"
+      info("Error: Fixed #{fixed_record_ids.size} and saved #{saved_record_ids.size} do not match!")
       exit(2)
     end
   else
-    puts "[info] fix_ids: There are no records to fix."
+    info('There are no records to fix.')
   end
 end
 
 # This is useful because ACT health removes the all-but-current PDF.
 def save_to_wayback_machine
-  puts '[info] save_to_wayback_machine: Saving PDF to be scraped to the Wayback Machine.'
+  info('Saving PDF to be scraped to the Wayback Machine.')
   require 'net/http'
 
   save_url = 'http://web.archive.org/save/' + url
@@ -375,11 +385,11 @@ def save_to_wayback_machine
     request = Net::HTTP::Get.new(uri)
     response = http.request(request)
     if response.class != Net::HTTPFound
-      puts "[info] save_to_wayback_machine: Attempt to save #{url} to Wayback Machine failed"
-      puts "[info] save_to_wayback_machine: Checking if the linked PDF is different to the last known PDF."
+      info("Attempt to save #{url} to Wayback Machine failed.")
+      info('Checking if the linked PDF is different to the last known PDF.')
       abort_if_updated?
-      puts "[info] save_to_wayback_machine: The PDF hasn't changed, but the PDF is no longer there."
-      puts "[info] save_to_wayback_machine: Exiting!"
+      info("The PDF hasn't changed, but the PDF is no longer there.")
+      info("Exiting!")
       exit(2)
     end
   end
@@ -395,15 +405,15 @@ def main
   # The normal scraper run
   prosecutions = fetch_and_build_prosecutions
 
-  puts "### Found #{prosecutions.size} notices"
+  info("### Found #{prosecutions.size} notices")
   new_prosecutions = prosecutions.select {|r| !existing_record_ids.include?(r['id'])}
-  puts "### There are #{new_prosecutions.size} new prosecutions"
+  info("### There are #{new_prosecutions.size} new prosecutions")
   new_prosecutions.map! {|p| geocode(p) }
 
   # Serialise
   ScraperWiki.save_sqlite(['id'], new_prosecutions)
 
-  puts "Done"
+  info('Done')
 end
 
 main()
