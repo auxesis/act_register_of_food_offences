@@ -335,7 +335,41 @@ def fetch_and_build_prosecutions
   prosecutions = split_records_into_multiple_prosecutions(records)
 end
 
+def fix_ids
+  records = ScraperWiki.select('* from data')
+  original_record_ids = records.map {|r| r['id']}
+
+  records.each { |record| record['id'] = generate_id(record) }
+  records.uniq! { |record| record['id'] }
+  fixed_record_ids = records.map {|r| r['id']}
+
+  if (original_record_ids - fixed_record_ids).size > 0
+    puts "[info] fix_ids: Number of records to fix: #{original_record_ids.size}"
+    puts "[info] fix_ids: Number of records after fix: #{fixed_record_ids.size}"
+
+    puts "[info] fix_ids: Deleting old records!"
+    ScraperWiki.sqliteexecute('DELETE FROM data')
+
+    puts "[info] fix_ids: Saving new records!"
+    ScraperWiki.save_sqlite(['id'], records)
+    saved_record_ids = ScraperWiki.select('id from data').map {|r| r['id']}
+
+    puts "[info] fix_ids: Number of records after save: #{saved_record_ids.size}"
+
+    if fixed_record_ids.size != saved_record_ids.size
+      puts "[info] fix_ids: Error: fixed #{fixed_record_ids.size} and saved #{saved_record_ids.size} do not match!"
+      exit(2)
+    end
+  else
+    puts "[info] fix_ids: There are no records to fix."
+  end
+end
+
 def main
+  # Fix up ids after design flaw in algorithm to generate id
+  fix_ids
+
+  # The normal scraper run
   prosecutions = fetch_and_build_prosecutions
 
   puts "### Found #{prosecutions.size} notices"
