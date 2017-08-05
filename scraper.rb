@@ -20,7 +20,8 @@ class String
 end
 
 def generate_id(record)
-  return record.map(&:to_s).join(' ').to_md5
+  blacklist_keys = %w(id link lat lng)
+  return Hash[record.reject {|k,v| blacklist_keys.include?(k)}].map(&:to_s).join(' ').to_md5
 end
 
 def geocode(prosecution)
