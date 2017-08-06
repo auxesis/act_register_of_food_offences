@@ -375,7 +375,7 @@ end
 
 # This is useful because ACT health removes the all-but-current PDF.
 def save_to_wayback_machine
-  info('Saving PDF to be scraped to the Wayback Machine.')
+  info('Saving target PDF to the Wayback Machine.')
   require 'net/http'
 
   save_url = 'http://web.archive.org/save/' + url
