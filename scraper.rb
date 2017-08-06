@@ -403,15 +403,16 @@ def main
   save_to_wayback_machine
 
   # The normal scraper run
-  prosecutions = fetch_and_build_prosecutions
+  scraped_records = fetch_and_build_prosecutions
 
-  info("### Found #{prosecutions.size} notices")
-  new_prosecutions = prosecutions.select {|r| !existing_record_ids.include?(r['id'])}
-  info("### There are #{new_prosecutions.size} new prosecutions")
-  new_prosecutions.map! {|p| geocode(p) }
+  info("### Scraped and extracted #{scraped_records.size} records")
+  new_records = scraped_records.select {|r| !existing_record_ids.include?(r['id'])}
+
+  info("### There are #{new_records.size} new records")
+  new_records.map! {|p| geocode(p) }
 
   # Serialise
-  ScraperWiki.save_sqlite(['id'], new_prosecutions)
+  ScraperWiki.save_sqlite(['id'], new_records)
 
   info('Done')
 end
