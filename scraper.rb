@@ -279,7 +279,7 @@ def split_records_into_multiple_prosecutions(records)
       prosecution = {
         'business_name'    => record['prosecution_details'],
         'business_address' => record['business_address'],
-        'offence_date'     => record['offence_dates'].first,
+        'offence_date'     => record['offence_dates'].first, # because it's nearly impossible to match offence dates
         'offence'          => offence,
         'imposed_penalty'  => penalty,
         'removal_date'     => record['removal_date'],
