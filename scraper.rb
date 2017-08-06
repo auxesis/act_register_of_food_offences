@@ -77,7 +77,7 @@ def base
 end
 
 def path
-  '/sites/default/files//Register_of_Food_Offences_20June_2017ppm.pdf'
+  '/sites/default/files//Register%20of%20Food%20Offences_0.pdf'
 end
 
 def url
@@ -85,7 +85,7 @@ def url
 end
 
 def last_known_link_text
-  'Register of Food Offences (updated 20 June 2017)'
+  'Register of Food Offences (updated 3 July 2017)'
 end
 
 # ACT health don't publish the PDF of the register of offences at a consistent
