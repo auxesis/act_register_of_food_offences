@@ -200,7 +200,7 @@ def finalise_record!
   values = @record.delete('Date of Offence') || []
   values.compact!
   values.map!(&:strip).reject! {|v| v.blank?}
-  values.map! {|v| Date.parse(v)}
+  values.map! {|v| Date.parse(v).to_s}
   @record['offence_dates'] = values
 
   # Offence Proven
@@ -220,7 +220,7 @@ def finalise_record!
   values = @record.delete('Removal date') || []
   values.compact!
   values.map!(&:strip).reject! {|v| v.blank?}
-  @record['removal_date'] = Date.parse(values.join(' '))
+  @record['removal_date'] = Date.parse(values.join(' ')).to_s
 
   # Notes
   values = @record.delete('Notes') || []
