@@ -340,7 +340,7 @@ def fetch_and_build_prosecutions
 
   pages = clean_pages(reader.pages)
   records = extract_records_from_pages(pages)
-  prosecutions = split_records_into_multiple_prosecutions(records)
+  split_records_into_multiple_prosecutions(records)
 end
 
 def fix_ids
