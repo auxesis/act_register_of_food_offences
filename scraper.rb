@@ -352,8 +352,8 @@ def fix_ids
   fixed_record_ids = records.map {|r| r['id']}
 
   if (original_record_ids - fixed_record_ids).size > 0
-    info('Number of records to fix: ' + original_record_ids.size)
-    info('Number of records after fix: ' + fixed_record_ids.size)
+    info('Number of records to fix: ' + original_record_ids.size.to_s)
+    info('Number of records after fix: ' + fixed_record_ids.size.to_s)
 
     info('Deleting old records!')
     ScraperWiki.sqliteexecute('DELETE FROM data')
@@ -362,7 +362,7 @@ def fix_ids
     ScraperWiki.save_sqlite(['id'], records)
     saved_record_ids = ScraperWiki.select('id from data').map {|r| r['id']}
 
-    info('Number of records after save: ' + saved_record_ids.size)
+    info('Number of records after save: ' + saved_record_ids.size.to_s)
 
     if fixed_record_ids.size != saved_record_ids.size
       info("Error: Fixed #{fixed_record_ids.size} and saved #{saved_record_ids.size} do not match!")
